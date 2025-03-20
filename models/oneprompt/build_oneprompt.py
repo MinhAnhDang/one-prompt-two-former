@@ -136,4 +136,5 @@ def _build_one(
                 new_state_dict = state_dict
 
         one.load_state_dict(new_state_dict, strict = False)
+        print(f"Loaded checkpoint from {checkpoint}")
     return one

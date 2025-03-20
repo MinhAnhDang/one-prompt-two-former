@@ -99,7 +99,7 @@ def get_network(args, net, use_gpu=True, gpu_device = 0, distribution = True):
     if net == 'oneprompt':
         from models.oneprompt import OnePredictor, one_model_registry
         from models.oneprompt.utils.transforms import ResizeLongestSide
-        net = one_model_registry[args.baseline](args).to(device)
+        net = one_model_registry[args.baseline](args, checkpoint=args.one_ckpt).to(device)
     else:
         print('the network name you have entered is not supported yet')
         sys.exit()

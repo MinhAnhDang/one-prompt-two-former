@@ -114,7 +114,7 @@ class OnePromptEncoderViT(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         b = x.size(0)
-        skips = [[] for i in range(b)]
+        # skips = [[] for i in range(b)]
         skips = []
         x = self.patch_embed(x)
         if self.pos_embed is not None:
