@@ -1,0 +1,9 @@
+__pycache__
+/models/oneprompt/__pycache__/
+logs/
+checkpoint/
+runs/
+figs/
+data/
+
+# cp /mnt/c/Users/dangm/OneDrive/Desktop/medsam_vit_b.pth /home/dmyann/projects/one-prompt/MedSAM/work_dir/MedSAM
