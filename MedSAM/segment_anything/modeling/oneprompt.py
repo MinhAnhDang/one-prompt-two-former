@@ -69,9 +69,9 @@ class OnePrompt(nn.Module):
         if 'pt' not in template_input:
             tmp_img, pt, tmp_mask = generate_click_prompt(tmp_img, tmp_mask)
         else:
-            pt = template_input['pt'].unsqueeze(0).repeat(args.b, 1, 1, 1)
-            point_labels = template_input['p_label'].unsqueeze(0).repeat(args.b, 1, 1, 1)
-        
+            pt = template_input['pt']
+            point_labels = template_input['p_label']
+
         if point_labels[0] != -1:
             point_coords = pt
             coords_torch = torch.as_tensor(point_coords, dtype=torch.float, device=device)
