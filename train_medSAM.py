@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 import os
 join = os.path.join
 import torch
-from segment_anything import sam_model_registry
-from segment_anything.modeling import OnePrompt
-from segment_anything.modeling import OnePromptFormer
+from MedSAM.segment_anything import sam_model_registry
+from MedSAM.segment_anything.modeling import OnePrompt
+from MedSAM.segment_anything.modeling import OnePromptFormer
 from skimage import io, transform
 import torch.nn.functional as F
 import os
