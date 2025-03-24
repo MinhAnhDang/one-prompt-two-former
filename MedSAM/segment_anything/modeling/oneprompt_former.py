@@ -376,6 +376,7 @@ class OnePromptFormer(nn.Module):
         multimask_output: bool,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         x = raw_emb + tmp_emb
+        print("x(raw+tmp) shape at begin: ", x.shape)
         x = self.neck(x.permute(0, 3, 1, 2))
         x = x.permute(0, 2, 3, 1)
         # print("x(raw+tmp->neck-> x)) shape at begin: ", x.shape)
