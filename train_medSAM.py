@@ -101,6 +101,7 @@ features_former = OnePromptFormer(
                     mlp_dim = mlp_dim
     ).to(device)
 model = OnePrompt(
+    args=args,
     image_encoder=medsam_model.image_encoder,
     onepropmt_former=features_former,
     mask_decoder=medsam_model.mask_decoder,
@@ -109,7 +110,11 @@ model = OnePrompt(
 # print(model)
 ### Train the model
 for data in nice_train_loader:
+    # print(data['pt'][0])
+    # print(data['p_label'][0])
+    # print(data["pt"])
     prediction = model(data, data, multimask_output=True)
-    # print(model.device)
+    print(model.device)
     print(prediction.shape)
+    break
     

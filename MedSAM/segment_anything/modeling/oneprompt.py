@@ -17,6 +17,7 @@ from datetime import datetime
 from .oneprompt_former import OnePromptFormer
 import shutil
 import glob
+from utils import *
 
 # set seeds
 torch.manual_seed(2023)
@@ -25,6 +26,7 @@ torch.cuda.empty_cache()
 class OnePrompt(nn.Module):
     def __init__(
         self,
+        args,
         image_encoder,
         onepropmt_former,
         mask_decoder,
@@ -33,7 +35,7 @@ class OnePrompt(nn.Module):
         pixel_std: List[float] = [58.395, 57.12, 57.375],
     ):
         super().__init__()
-        # self.args = args
+        self.args = args
         self.image_encoder = image_encoder
         self.mask_decoder = mask_decoder
         self.prompt_encoder = prompt_encoder
@@ -56,21 +58,36 @@ class OnePrompt(nn.Module):
                 multimask_output: bool,
                 ) -> List[Dict[str, torch.Tensor]]:
         device = self.device
-        input_images = torch.stack([self.preprocess(x) for x in batched_input["image"].to(device)], dim=0)
-        template_images = torch.stack([self.preprocess(x) for x in template_input["image"].to(device)], dim=0)
+        imgs = batched_input['image'].to(dtype = torch.float32, device = device)
+        masks = batched_input['label'].to(dtype = torch.float32, device = device)
+
+        name = batched_input['image_meta_dict']['filename_or_obj']
+        
+        tmp_img = template_input['image'].to(dtype = torch.float32, device = device)[0,:,:,:].unsqueeze(0).repeat(self.args.b, 1, 1, 1)
+        tmp_mask = template_input['label'].to(dtype = torch.float32, device = device)[0,:,:,:].unsqueeze(0).repeat(self.args.b, 1, 1, 1)
         # do not compute gradients for prompt encoder
+        if 'pt' not in template_input:
+            tmp_img, pt, tmp_mask = generate_click_prompt(tmp_img, tmp_mask)
+        else:
+            pt = template_input['pt'].unsqueeze(0).repeat(args.b, 1, 1, 1)
+            point_labels = template_input['p_label'].unsqueeze(0).repeat(args.b, 1, 1, 1)
+        
+        if point_labels[0] != -1:
+            point_coords = pt
+            coords_torch = torch.as_tensor(point_coords, dtype=torch.float, device=device)
+            labels_torch = torch.as_tensor(point_labels, dtype=torch.int, device=device)
+            coords_torch, labels_torch = coords_torch[None, :, :], labels_torch[None, :]
+            pt = (coords_torch, labels_torch)
+        # print("pt", pt)
+        
         with torch.no_grad():
-            r_emb, r_list = self.image_encoder(input_images)  # (B, 256, 64, 64)
-            t_emb, t_list= self.image_encoder(template_images)  # (B, 256, 64, 64)
+            r_emb, r_list = self.image_encoder(imgs)  # (B, 256, 64, 64)
+            t_emb, t_list= self.image_encoder(tmp_img)  # (B, 256, 64, 64)
         outputs = []
-        for image_record, r_list, t_list, r_emb, t_emb in zip(batched_input, r_list, t_list, r_emb, t_emb):
-            if "point_coords" in image_record:
-                points = (image_record["point_coords"], image_record["point_labels"])
-            else:
-                points = None
-                
+        
+        for image_record, r_list, t_list, r_emb, t_emb in zip(batched_input, r_list, t_list, r_emb, t_emb):      
             p1, p2, sparse_embeddings, dense_embeddings = self.prompt_encoder(
-                points=points,
+                points=pt,
                 boxes=None,
                 masks=None,
             )
