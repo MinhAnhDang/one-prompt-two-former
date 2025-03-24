@@ -11,3 +11,4 @@ from .mask_decoder import MaskDecoder
 from .prompt_encoder import PromptEncoder
 from .transformer import TwoWayTransformer
 from .oneprompt_former import OnePromptFormer
+from .oneprompt import OnePrompt

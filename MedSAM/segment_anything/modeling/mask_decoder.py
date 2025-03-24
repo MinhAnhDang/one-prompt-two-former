@@ -136,6 +136,8 @@ class MaskDecoder(nn.Module):
             src = torch.repeat_interleave(image_embeddings, tokens.shape[0], dim=0)
         else:
             src = image_embeddings
+        # print("src shape", src.shape)
+        # print("dense_prompt_embeddings shape", dense_prompt_embeddings.shape)
         src = src + dense_prompt_embeddings
         pos_src = torch.repeat_interleave(image_pe, tokens.shape[0], dim=0)
         b, c, h, w = src.shape

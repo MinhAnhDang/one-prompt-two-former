@@ -110,10 +110,10 @@ class OnePromptDecoder(nn.Module):
         for u in range(self.depth):
             if u == 0:
                 x, img_embed, tmp_embed, temp_pos,  p1, p2= self.deals[u](x, skips_raw[-(u + 1)], skips_tmp[-(u + 1)], image_pe, pt1, pt2, dense_prompt_embeddings)
-                print('tmp_embed size', tmp_embed.size())
-                print('temp_pos size', temp_pos.size())
-                print('p1 size', p1.size())
-                print('p2 size', p2.size())
+                # print('tmp_embed size', tmp_embed.size())
+                # print('temp_pos size', temp_pos.size())
+                # print('p1 size', p1.size())
+                # print('p2 size', p2.size())
                 p1 = p1 + temp_pos.flatten(2).permute(0, 2, 1)
                 p2 = p2 + temp_pos.flatten(2).permute(0, 2, 1)
                 img_embed = img_embed.flatten(2).permute(0, 2, 1)

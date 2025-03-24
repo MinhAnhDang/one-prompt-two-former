@@ -119,9 +119,9 @@ class PromptParser(nn.Module):
         # att_m = torch.max(torch.matmul(att_m, etq), etq)
         torch.cuda.empty_cache()
         gc.collect()
-        print("Memory allocated", torch.cuda.memory_allocated(0)/1e9)
-        print("Reversed memory", torch.cuda.memory_reserved(0)/1e9)
-        att_m = torch.matmul(att_m, etq)
+        # print("Memory allocated", torch.cuda.memory_allocated(0)/1e9)
+        # print("Reversed memory", torch.cuda.memory_reserved(0)/1e9)
+        # att_m = torch.matmul(att_m, etq)
         res = torch.einsum ('bncx, bnx -> bnc', att_m, tmp_embedding + prompt_embedding1 + prompt_embedding2) 
         return image_embedding, res
 
@@ -176,8 +176,8 @@ class _OnePromptFormer(nn.Module):
     ) -> Tuple[Tensor, Tensor]:
 
         image_embedding, et = self.parser(image_embedding,tmp_embedding, prompt_embedding1, prompt_embedding2)
-        print("et size is", et.size())
-        print("image_embedding size is", image_embedding.size())
+        # print("et size is", et.size())
+        # print("image_embedding size is", image_embedding.size())
         es = self.attns1(q=image_embedding, k= emb, v= emb)
         es_bk = es
         es = self.attns2(q=et, k= es, v= es)
@@ -405,4 +405,4 @@ class OnePromptFormer(nn.Module):
         x = self.patch_embed(x)
         x = rearrange(x,'b c1 c2 d-> b (c1 c2) d')
         # print("x shape after 1 former", x.shape)
-        return x
+        return raw_emb, x

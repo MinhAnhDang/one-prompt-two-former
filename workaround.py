@@ -242,8 +242,9 @@ box_np = np.array([[100,100, 300, 300]])
 # transfer box_np t0 1024x1024 scale
 box_1024 = box_np / np.array([W, H, W, H]) * 1024
 with torch.no_grad():
+    print("Image shape", img_1024_tensor.shape)
     image_embedding, skips = medsam_model.image_encoder(img_1024_tensor) # (1, 256, 64, 64)
-    # print("Image embedding", image_embedding.shape)
+    print("Image embedding", image_embedding.shape)
     # print("Skips embedding", skips[-1].shape)
     box_torch = torch.as_tensor(box_1024, dtype=torch.float, device=image_embedding.device)
     if len(box_torch.shape) == 2:
@@ -276,7 +277,7 @@ with torch.no_grad():
                     mlp_dim = mlp_dim
     ).to(image_embedding.device)
     
-    x = features_former(
+    r_emb, x = features_former(
                 skips_raw = skips,
                 skips_tmp = skips,
                 raw_emb = image_embedding,
@@ -297,24 +298,24 @@ with torch.no_grad():
     #                 mlp_dim = mlp_dim
     # )
     low_res_logits, _ = medsam_model.mask_decoder(
-        image_embeddings=image_embedding, # (B, 256, 64, 64)
+        image_embeddings=r_emb, # (B, 256, 64, 64)
         image_pe=medsam_model.prompt_encoder.get_dense_pe(), # (1, 256, 64, 64)
-        sparse_prompt_embeddings=sparse_embeddings, # (B, 2, 256)
+        sparse_prompt_embeddings=x, # (B, 2, 256)
         dense_prompt_embeddings=dense_embeddings, # (B, 256, 64, 64)
         multimask_output=False,
         )
 
-    # low_res_pred = torch.sigmoid(low_res_logits)  # (1, 1, 256, 256)
+    low_res_pred = torch.sigmoid(low_res_logits)  # (1, 1, 256, 256)
 
-    # low_res_pred = F.interpolate(
-    #     low_res_pred,
-    #     size=(H, W),
-    #     mode="bilinear",
-    #     align_corners=False,
-    # )  # (1, 1, gt.shape)
-    # low_res_pred = low_res_pred.squeeze().cpu().numpy()  # (256, 256)
-    # medsam_seg = (low_res_pred > 0.5).astype(np.uint8)
-    # print("Predicted mask:", medsam_seg.shape)
+    low_res_pred = F.interpolate(
+        low_res_pred,
+        size=(H, W),
+        mode="bilinear",
+        align_corners=False,
+    )  # (1, 1, gt.shape)
+    low_res_pred = low_res_pred.squeeze().cpu().numpy()  # (256, 256)
+    medsam_seg = (low_res_pred > 0.5).astype(np.uint8)
+    print("Predicted mask:", medsam_seg.shape)
     
     
 # medsam_seg = medsam_inference(medsam_model, image_embedding, box_1024, H, W)
