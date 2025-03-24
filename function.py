@@ -16,7 +16,7 @@ from torch.utils.data import DataLoader
 #from dataset import *
 from torch.autograd import Variable
 from PIL import Image
-from tensorboardX import SummaryWriter
+# from tensorboardX import SummaryWriter
 #from models.discriminatorlayer import discriminator
 from conf import settings
 import time
