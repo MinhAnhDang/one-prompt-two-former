@@ -178,17 +178,17 @@ for epoch in range(start_epoch, num_epochs):
         if args.use_amp:
                 ## AMP
                 with torch.autocast(device_type="cuda", dtype=torch.float16):
-                    medsam_pred = model(data, data, multimask_output=True)
-                    loss = seg_loss(medsam_pred, data['label']) + ce_loss(
-                        medsam_pred, data['label'].float()
+                    outputs = model(data, data, multimask_output=True)
+                    loss = seg_loss(outputs['masks'], data['label']) + ce_loss(
+                        outputs['masks'], data['label'].float()
                     )
                 scaler.scale(loss).backward()
                 scaler.step(optimizer)
                 scaler.update()
                 optimizer.zero_grad()
         else:
-                medsam_pred = model(data, data, multimask_output=True)
-                loss = seg_loss(medsam_pred, data['label']) + ce_loss(medsam_pred, data['label'].float())
+                outputs = model(data, data, multimask_output=True)
+                loss = seg_loss(outputs['masks'], data['label']) + ce_loss(outputs['masks'], data['label'].float())
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
