@@ -2,11 +2,11 @@ import argparse
 
 def parse_args():    
     parser = argparse.ArgumentParser()
-    parser.add_argument('-net', type=str, required=True, help='net type')
-    parser.add_argument('-baseline', type=str, default='unet', help='baseline net type')
+    # parser.add_argument('-net', type=str, required=True, help='net type')
+    # parser.add_argument('-baseline', type=str, default='unet', help='baseline net type')
     parser.add_argument('-seg_net', type=str, default='transunet', help='net type')
-    parser.add_argument('-mod', type=str, required=True, help='mod type:seg,cls,val_ad')
-    parser.add_argument('-exp_name', type=str, required=True, help='net type')
+    # parser.add_argument('-mod', type=str, required=True, help='mod type:seg,cls,val_ad')
+    # parser.add_argument('-exp_name', type=str, required=True, help='net type')
     parser.add_argument('-type', type=str, default='map', help='condition type:ave,rand,rand_map')
     parser.add_argument('-vis', type=int, default=None, help='visualization')
     parser.add_argument('-reverse', type=bool, default=False, help='adversary reverse')
@@ -27,7 +27,7 @@ def parse_args():
     parser.add_argument('-b', type=int, default=8, help='batch size for dataloader')
     parser.add_argument('-s', type=bool, default=True, help='whether shuffle the dataset')
     parser.add_argument('-warm', type=int, default=1, help='warm up training phase')
-    parser.add_argument('-lr', type=float, default=1e-4, help='initial learning rate')
+    # parser.add_argument('-lr', type=float, default=1e-4, help='initial learning rate')
     parser.add_argument('-uinch', type=int, default=1, help='input channel of unet')
     parser.add_argument('-imp_lr', type=float, default=3e-4, help='implicit learning rate')
     parser.add_argument('-weights', type=str, default = 0, help='the weights file you want to test')
@@ -46,6 +46,16 @@ def parse_args():
     type=str,
     default='../data',
     help='The path of segmentation data')
+    parser.add_argument("-num_workers", type=int, default=0)
+    parser.add_argument("-work_dir", type=str, default="./work_dir")
+    parser.add_argument("-task_name", type=str, default="MedSAM-ViT-B")
+    parser.add_argument("-num_epochs", type=int, default=1000)
+    parser.add_argument("-batch_size", type=int, default=2)
+    parser.add_argument("-weight_decay", type=float, default=0.01, help="weight decay (default: 0.01)")
+    parser.add_argument("-lr", type=float, default=0.0001, metavar="LR", help="learning rate (absolute lr)")
+    parser.add_argument("-use_wandb", type=bool, default=False, help="use wandb to monitor training")
+    parser.add_argument("-use_amp", action="store_true", default=False, help="use amp")
+    parser.add_argument("-resume", type=str, default="", help="Resuming training from checkpoint")
     opt = parser.parse_args()
 
     return opt
