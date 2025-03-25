@@ -121,14 +121,14 @@ class OnePrompt(nn.Module):
             dense_prompt_embeddings=dense_embeddings,  # (B, 256, 64, 64)
             multimask_output=False,
         )
-        print("low_res_masks", low_res_masks.shape)
-        print("iou_predictions", iou_predictions.shape)
+        # print("low_res_masks", low_res_masks.shape)
+        # print("iou_predictions", iou_predictions.shape)
         masks = self.postprocess_masks(
             low_res_masks,
             input_size=batched_input["image"].shape[-2:],
             # original_size=batched_input["original_size"],
         )
-        print("masks", masks.shape)
+        # print("masks", masks.shape)
         # masks = masks > self.mask_threshold
         outputs.append(
             {
@@ -137,7 +137,8 @@ class OnePrompt(nn.Module):
                 "low_res_logits": low_res_masks,
             }
         )
-
+        return outputs
+    
     def preprocess(self, x: torch.Tensor) -> torch.Tensor:
         """Normalize pixel values and pad to a square input."""
         # Normalize colors
