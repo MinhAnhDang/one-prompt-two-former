@@ -169,7 +169,7 @@ if args.resume is not None:
         medsam_model.load_state_dict(checkpoint["model"])
         optimizer.load_state_dict(checkpoint["optimizer"])
 if args.use_amp:
-    scaler = torch.cuda.amp.GradScaler()
+    scaler = torch.amp.GradScaler()
     
 for epoch in range(start_epoch, num_epochs):
     epoch_loss = 0
@@ -179,8 +179,8 @@ for epoch in range(start_epoch, num_epochs):
                 ## AMP
                 with torch.autocast(device_type="cuda", dtype=torch.float16):
                     outputs = model(data, data, multimask_output=True)[0]
-                    loss = seg_loss(outputs['masks'], data['label']) + ce_loss(
-                        outputs['masks'], data['label'].float()
+                    loss = seg_loss(outputs['masks'], data['label'].to(device)) + ce_loss(
+                        outputs['masks'], data['label'].float().to(device)
                     )
                 scaler.scale(loss).backward()
                 scaler.step(optimizer)
@@ -190,7 +190,7 @@ for epoch in range(start_epoch, num_epochs):
                 outputs = model(data, data, multimask_output=True)[0]
                 # print(outputs[0]['masks'].shape)[0]
                 # print(data['label'].shape)
-                loss = seg_loss(outputs['masks'], data['label']) + ce_loss(outputs['masks'], data['label'].float())
+                loss = seg_loss(outputs['masks'], data['label'].to(device)) + ce_loss(outputs['masks'], data['label'].float().to(device))
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
