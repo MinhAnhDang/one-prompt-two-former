@@ -161,19 +161,24 @@ class PromptEncoder(nn.Module):
             Bx(embed_dim)x(embed_H)x(embed_W)
         """
         bs = self._get_batch_size(points, boxes, masks)
+        # print("Batch size: ", bs)
         sparse_embeddings = torch.empty(
             (bs, 0, self.embed_dim), device=self._get_device()
         )
         if points is not None:
             coords, labels = points
             point_embeddings = self._embed_points(coords, labels, pad=(boxes is None))
-            p1 = torch.cat([sparse_embeddings, point_embeddings[:, 0, :].unsqueeze(0)], dim=1)
-            p2 = torch.cat([sparse_embeddings, point_embeddings[:, 1, :].unsqueeze(0)], dim=1)
+            # print("Point embeddings shape: ", point_embeddings.shape)
+            # print("Sparse embeddings shape: ", sparse_embeddings.shape)
+            # print("P1 embeddings: ", point_embeddings[:, 0, :].unsqueeze(1).shape)
+            # print("P2 embeddings: ", point_embeddings[:, 1, :].unsqueeze(1).shape)
+            p1 = torch.cat([sparse_embeddings, point_embeddings[:, 0, :].unsqueeze(1)], dim=1)
+            p2 = torch.cat([sparse_embeddings, point_embeddings[:, 1, :].unsqueeze(1)], dim=1)
             sparse_embeddings = torch.cat([sparse_embeddings, point_embeddings], dim=1)
         if boxes is not None:
             box_embeddings = self._embed_boxes(boxes)
-            p1 = torch.cat([sparse_embeddings, box_embeddings[:, 0, :].unsqueeze(0)], dim=1)
-            p2 = torch.cat([sparse_embeddings, box_embeddings[:, 1, :].unsqueeze(0)], dim=1)
+            p1 = torch.cat([sparse_embeddings, box_embeddings[:, 0, :].unsqueeze(1)], dim=1)
+            p2 = torch.cat([sparse_embeddings, box_embeddings[:, 1, :].unsqueeze(1)], dim=1)
             sparse_embeddings = torch.cat([sparse_embeddings, box_embeddings], dim=1)
 
         if masks is not None:

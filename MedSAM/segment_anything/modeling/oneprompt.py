@@ -77,7 +77,7 @@ class OnePrompt(nn.Module):
             point_coords = pt
             coords_torch = torch.as_tensor(point_coords, dtype=torch.float, device=device)
             labels_torch = torch.as_tensor(point_labels, dtype=torch.int, device=device)
-            coords_torch, labels_torch = coords_torch[None, :, :], labels_torch[None, :]
+            coords_torch, labels_torch = coords_torch[:, None, :], labels_torch[:, None]
             pt = (coords_torch, labels_torch)
         # print("pt", pt)
         
@@ -93,6 +93,10 @@ class OnePrompt(nn.Module):
             boxes=None,
             masks=None,
         )
+        # print("p1", p1.shape)
+        # print("p2", p2.shape)
+        # print("sparse_embeddings", sparse_embeddings.shape)
+        # print("dense_embeddings", dense_embeddings.shape)
         
         r_emb, mixed_features = self.oneprompt_former(
             skips_raw = r_list,
