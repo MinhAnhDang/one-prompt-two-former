@@ -187,7 +187,7 @@ for epoch in range(start_epoch, num_epochs):
                 scaler.update()
                 optimizer.zero_grad()
         else:
-                outputs = model(data, data, multimask_output=True)
+                outputs = model(data, data, multimask_output=True)[0]
                 # print(outputs[0]['masks'].shape)[0]
                 # print(data['label'].shape)
                 loss = seg_loss(outputs['masks'], data['label']) + ce_loss(outputs['masks'], data['label'].float())
