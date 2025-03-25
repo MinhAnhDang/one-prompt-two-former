@@ -24,6 +24,9 @@ torch.manual_seed(2023)
 torch.cuda.empty_cache()
 
 class OnePrompt(nn.Module):
+    mask_threshold: float = 0.0
+    image_format: str = "RGB"
+    
     def __init__(
         self,
         args,

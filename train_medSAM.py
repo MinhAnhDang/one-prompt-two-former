@@ -110,11 +110,11 @@ model = OnePrompt(
 # print(model)
 ### Train the model
 for data in nice_train_loader:
-    # print(data['pt'][0])
-    # print(data['p_label'][0])
-    # print(data["pt"])
+    # print(data['pt'].shape)
+    # print(data['p_label'].shape)
+    # print(data["pt"][0])
     prediction = model(data, data, multimask_output=True)
     print(model.device)
-    print(prediction.shape)
+    print(prediction)
     break
     
