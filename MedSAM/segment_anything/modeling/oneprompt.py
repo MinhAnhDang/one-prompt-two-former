@@ -60,7 +60,8 @@ class OnePrompt(nn.Module):
         device = self.device
         imgs = batched_input['image'].to(dtype = torch.float32, device = device)
         masks = batched_input['label'].to(dtype = torch.float32, device = device)
-
+        # print("imgs", imgs.shape)
+        # print("masks", masks.shape)
         name = batched_input['image_meta_dict']['filename_or_obj']
         
         tmp_img = template_input['image'].to(dtype = torch.float32, device = device)[0,:,:,:].unsqueeze(0).repeat(self.args.b, 1, 1, 1)
@@ -82,50 +83,51 @@ class OnePrompt(nn.Module):
         
         with torch.no_grad():
             r_emb, r_list = self.image_encoder(imgs)  # (B, 256, 64, 64)
+            # print("r_emb", r_emb.shape)
             t_emb, t_list= self.image_encoder(tmp_img)  # (B, 256, 64, 64)
         outputs = []
         
-        for image_record, r_list, t_list, r_emb, t_emb in zip(batched_input, r_list, t_list, r_emb, t_emb):      
-            p1, p2, sparse_embeddings, dense_embeddings = self.prompt_encoder(
-                points=pt,
-                boxes=None,
-                masks=None,
-            )
-            
-            r_emb, mixed_features = self.oneprompt_former(
-                skips_raw = r_list,
-                skips_tmp = t_list,
-                raw_emb = r_emb,
-                tmp_emb = t_emb,
-                pt1 = p1,
-                pt2 = p2,
-                image_pe=self.prompt_encoder.get_dense_pe(),
-                sparse_prompt_embeddings=sparse_embeddings,
-                dense_prompt_embeddings=dense_embeddings,
-                multimask_output=False)
-            
+        
+        p1, p2, sparse_embeddings, dense_embeddings = self.prompt_encoder(
+            points=pt,
+            boxes=None,
+            masks=None,
+        )
+        
+        r_emb, mixed_features = self.oneprompt_former(
+            skips_raw = r_list,
+            skips_tmp = t_list,
+            raw_emb = r_emb,
+            tmp_emb = t_emb,
+            pt1 = p1,
+            pt2 = p2,
+            image_pe=self.prompt_encoder.get_dense_pe(),
+            sparse_prompt_embeddings=sparse_embeddings,
+            dense_prompt_embeddings=dense_embeddings,
+            multimask_output=False)
+        
 
-            low_res_masks, iou_predictions = self.mask_decoder(
-                image_embeddings=r_emb,  # (B, 256, 64, 64)
-                image_pe=self.prompt_encoder.get_dense_pe(),  # (1, 256, 64, 64)
-                sparse_prompt_embeddings=mixed_features,  # (B, 2, 256)
-                dense_prompt_embeddings=dense_embeddings,  # (B, 256, 64, 64)
-                multimask_output=False,
-            )
-            
-            masks = self.postprocess_masks(
-                low_res_masks,
-                input_size=image_record["image"].shape[-2:],
-                original_size=image_record["original_size"],
-            )
-            masks = masks > self.mask_threshold
-            outputs.append(
-                {
-                    "masks": masks,
-                    "iou_predictions": iou_predictions,
-                    "low_res_logits": low_res_masks,
-                }
-            )
+        low_res_masks, iou_predictions = self.mask_decoder(
+            image_embeddings=r_emb,  # (B, 256, 64, 64)
+            image_pe=self.prompt_encoder.get_dense_pe(),  # (1, 256, 64, 64)
+            sparse_prompt_embeddings=mixed_features,  # (B, 2, 256)
+            dense_prompt_embeddings=dense_embeddings,  # (B, 256, 64, 64)
+            multimask_output=False,
+        )
+        
+        masks = self.postprocess_masks(
+            low_res_masks,
+            input_size=batched_input["image"].shape[-2:],
+            # original_size=batched_input["original_size"],
+        )
+        masks = masks > self.mask_threshold
+        outputs.append(
+            {
+                "masks": masks,
+                "iou_predictions": iou_predictions,
+                "low_res_logits": low_res_masks,
+            }
+        )
 
     def preprocess(self, x: torch.Tensor) -> torch.Tensor:
         """Normalize pixel values and pad to a square input."""
@@ -143,7 +145,7 @@ class OnePrompt(nn.Module):
         self,
         masks: torch.Tensor,
         input_size: Tuple[int, ...],
-        original_size: Tuple[int, ...],
+        # original_size: Tuple[int, ...],
     ) -> torch.Tensor:
         """
         Remove padding and upscale masks to the original image size.
@@ -167,5 +169,5 @@ class OnePrompt(nn.Module):
             align_corners=False,
         )
         masks = masks[..., : input_size[0], : input_size[1]]
-        masks = F.interpolate(masks, original_size, mode="bilinear", align_corners=False)
+        # masks = F.interpolate(masks, original_size, mode="bilinear", align_corners=False)
         return masks
