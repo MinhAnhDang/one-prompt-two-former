@@ -178,7 +178,7 @@ for epoch in range(start_epoch, num_epochs):
         if args.use_amp:
                 ## AMP
                 with torch.autocast(device_type="cuda", dtype=torch.float16):
-                    outputs = model(data, data, multimask_output=True)
+                    outputs = model(data, data, multimask_output=True)[0]
                     loss = seg_loss(outputs['masks'], data['label']) + ce_loss(
                         outputs['masks'], data['label'].float()
                     )
@@ -188,8 +188,8 @@ for epoch in range(start_epoch, num_epochs):
                 optimizer.zero_grad()
         else:
                 outputs = model(data, data, multimask_output=True)
-                print(outputs['masks'].shape)
-                print(data['label'].shape)
+                # print(outputs[0]['masks'].shape)[0]
+                # print(data['label'].shape)
                 loss = seg_loss(outputs['masks'], data['label']) + ce_loss(outputs['masks'], data['label'].float())
                 loss.backward()
                 optimizer.step()
