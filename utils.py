@@ -1150,5 +1150,34 @@ def generate_click_prompt(img, msk, pt_label = 1):
 
     return img, pt, msk #[b, 2, d], [b, c, h, w, d]
 
+def generate_click_prompt2D(img, msk, pt_label=1):
+    # return: prompt, prompt mask
+    b, c, h, w = msk.size()
+    msk = msk[:,0,:,:]
+    pt_list = []
+    pt_label_list = []
+    for j in range(b):
+        msk_s = msk[j,:,:]
+        indices = torch.nonzero(msk_s)
+        if indices.size(0) == 0:
+            # generate a random array between [0-h, 0-h]:
+            random_index = torch.randint(0, h, (2,)).to(device = msk.device)
+            # new_s = msk_s
+        else:
+            random_index = random.choice(indices)
+            label = msk_s[random_index[0], random_index[1]]
+            # new_s = torch.zeros_like(msk_s)
+            # convert bool tensor to int
+            # new_s = (msk_s == label).to(dtype = torch.float)
+            # new_s[msk_s == label] = 1
+        pt_list.append(random_index)
+        pt_label_list.append(torch.tensor(pt_label).to(device=msk.device))
+        # msk_list_s.append(new_s)
+    pts = torch.stack(pt_list, dim=0)
+    pt_labels = torch.stack(pt_label_list, dim=0)
+    # msks = torch.stack(msk_list_s, dim=0)
+    # msk = msk.unsqueeze(1)
+
+    return pts, pt_labels #[b, 2, d], [b, c, h, w, d]
 
 

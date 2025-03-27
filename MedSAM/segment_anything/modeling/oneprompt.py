@@ -64,13 +64,15 @@ class OnePrompt(nn.Module):
         masks = batched_input['label'].to(dtype = torch.float32, device = device)
         # print("imgs", imgs.shape)
         # print("masks", masks.shape)
-        name = batched_input['image_meta_dict']['filename_or_obj']
+        # name = batched_input['image_meta_dict']['filename_or_obj']
         
         tmp_img = template_input['image'].to(dtype = torch.float32, device = device)[0,:,:,:].unsqueeze(0).repeat(self.args.b, 1, 1, 1)
         tmp_mask = template_input['label'].to(dtype = torch.float32, device = device)[0,:,:,:].unsqueeze(0).repeat(self.args.b, 1, 1, 1)
         # do not compute gradients for prompt encoder
         if 'pt' not in template_input:
-            tmp_img, pt, tmp_mask = generate_click_prompt(tmp_img, tmp_mask)
+            # tmp_img, pt, tmp_mask = generate_click_prompt3D(tmp_img, tmp_mask)
+            pt, point_labels = generate_click_prompt2D(tmp_img, tmp_mask)
+            
         else:
             pt = template_input['pt']
             point_labels = template_input['p_label']
