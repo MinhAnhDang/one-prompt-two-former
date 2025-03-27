@@ -172,12 +172,12 @@ if args.dataset == 'isic':
                 clip=True,
             ),
             CropForegroundd(keys=["image", "label"], source_key="image"),
-            Orientationd(keys=["image", "label"], axcodes="RAS"),
-            Spacingd(
-                keys=["image", "label"],
-                pixdim=(1.5, 1.5, 2.0),
-                mode=("bilinear", "nearest"),
-            ),
+            # Orientationd(keys=["image", "label"], axcodes="RAS"),
+            # Spacingd(
+            #     keys=["image", "label"],
+            #     pixdim=(1.5, 1.5, 2.0),
+            #     mode=("bilinear", "nearest"),
+            # ),
             EnsureTyped(keys=["image", "label"], device=device, track_meta=False),
             Resized(keys=["image", "label"],spatial_size=(args.image_size, args.image_size)),
 
@@ -226,12 +226,12 @@ if args.dataset == 'isic':
                 keys=["image"], a_min=-175, a_max=250, b_min=0.0, b_max=1.0, clip=True
             ),
             CropForegroundd(keys=["image", "label"], source_key="image"),
-            Orientationd(keys=["image", "label"], axcodes="RAS"),
-            Spacingd(
-                keys=["image", "label"],
-                pixdim=(1.5, 1.5, 2.0),
-                mode=("bilinear", "nearest"),
-            ),
+            # Orientationd(keys=["image", "label"], axcodes="RAS"),
+            # Spacingd(
+            #     keys=["image", "label"],
+            #     pixdim=(1.5, 1.5, 2.0),
+            #     mode=("bilinear", "nearest"),
+            # ),
             EnsureTyped(keys=["image", "label"], device=device, track_meta=True),
         ]
     )
@@ -241,9 +241,9 @@ if args.dataset == 'isic':
     datasets = os.path.join(data_dir, split_JSON)
     datalist = load_decathlon_datalist(datasets, True, "training")
     # val_files = load_decathlon_datalist(datasets, True, "validation")
-    print("Train files:", len(datalist))
+    # print("Train files:", len(datalist))
     # print("Validation files:", len(val_files))
-    print("datalist",datalist)
+    # print("datalist",datalist)
     train_ds = CacheDataset(
         data=datalist,
         transform=train_transforms,
