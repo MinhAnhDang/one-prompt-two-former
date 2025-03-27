@@ -43,6 +43,7 @@ from monai.transforms import (
     RandCropByPosNegLabeld,
     RandShiftIntensityd,
     ScaleIntensityRanged,
+    ScaleIntensityd,
     Spacingd,
     RandRotate90d,
     EnsureTyped,
@@ -163,10 +164,11 @@ if args.dataset == 'isic':
     train_transforms = Compose(
         [   
             LoadImaged(keys=["image", "label"], reader="PILReader", ensure_channel_first=True),
+            ScaleIntensityd(keys=["image","label"], minv=0.0, maxv=1.0),
             # ScaleIntensityRanged(
             #     keys=["image"],
-            #     a_min=-175,
-            #     a_max=250,
+            #     a_min=0.0,
+            #     a_max=1.0,
             #     b_min=0.0,
             #     b_max=1.0,
             #     clip=True,
@@ -222,8 +224,9 @@ if args.dataset == 'isic':
     val_transforms = Compose(
         [
             LoadImaged(keys=["image", "label"], ensure_channel_first=True),
+            ScaleIntensityd(keys=["image","label"], minv=0.0, maxv=1.0),
             # ScaleIntensityRanged(
-            #     keys=["image"], a_min=-175, a_max=250, b_min=0.0, b_max=1.0, clip=True
+            #     keys=["image"], a_min=0.0, a_max=1.0, b_min=0.0, b_max=1.0, clip=True
             # ),
             # CropForegroundd(keys=["image", "label"], source_key="image"),
             # Orientationd(keys=["image", "label"], axcodes="RAS"),
@@ -295,7 +298,7 @@ if args.use_amp:
 for epoch in range(start_epoch, num_epochs):
     epoch_loss = 0
     for step, data in enumerate(tqdm(nice_train_loader)):
-        print("query image", data['image'])
+        # print("query image", data['image'])
         optimizer.zero_grad()
         if args.use_amp:
                 ## AMP
