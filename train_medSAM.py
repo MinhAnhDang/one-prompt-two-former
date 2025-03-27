@@ -132,128 +132,128 @@ seg_loss = monai.losses.DiceLoss(sigmoid=True, squared_pred=True, reduction="mea
 ce_loss = nn.BCEWithLogitsLoss(reduction="mean")
 # %% Load the dataset
 if args.dataset == 'isic':
-    transform_train = transforms.Compose([
-            transforms.Resize((args.image_size,args.image_size)),
-            transforms.ToTensor(),
-        ])
+    # transform_train = transforms.Compose([
+    #         transforms.Resize((args.image_size,args.image_size)),
+    #         transforms.ToTensor(),
+    #     ])
 
-    transform_train_seg = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Resize((args.image_size,args.image_size)),
-    ])
+    # transform_train_seg = transforms.Compose([
+    #     transforms.ToTensor(),
+    #     transforms.Resize((args.image_size,args.image_size)),
+    # ])
 
-    transform_test = transforms.Compose([
-        transforms.Resize((args.image_size, args.image_size)),
-        transforms.ToTensor(),
-    ])
+    # transform_test = transforms.Compose([
+    #     transforms.Resize((args.image_size, args.image_size)),
+    #     transforms.ToTensor(),
+    # ])
 
-    transform_test_seg = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Resize((args.image_size, args.image_size)),
+    # transform_test_seg = transforms.Compose([
+    #     transforms.ToTensor(),
+    #     transforms.Resize((args.image_size, args.image_size)),
             
-    ])
-    isic_train_dataset = ISIC2016(args, args.data_path, transform = transform_train, transform_msk= transform_train_seg, mode = 'Training')
-    isic_test_dataset = ISIC2016(args, args.data_path, transform = transform_test, transform_msk= transform_test_seg, mode = 'Test')
-    print("Number of training samples: ", len(isic_train_dataset))
-    nice_train_loader = DataLoader(isic_train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True)
-    nice_test_loader = DataLoader(isic_test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, pin_memory=True)
+    # ])
+    # isic_train_dataset = ISIC2016(args, args.data_path, transform = transform_train, transform_msk= transform_train_seg, mode = 'Training')
+    # isic_test_dataset = ISIC2016(args, args.data_path, transform = transform_test, transform_msk= transform_test_seg, mode = 'Test')
+    # print("Number of training samples: ", len(isic_train_dataset))
+    # nice_train_loader = DataLoader(isic_train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True)
+    # nice_test_loader = DataLoader(isic_test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers, pin_memory=True)
     # pack = next(iter(nice_test_loader))
     # print(pack['image'].shape)
     
-    # train_transforms = Compose(
-    #     [   
-    #         LoadImaged(keys=["image", "label"], reader="PILReader", ensure_channel_first=True),
-    #         # ScaleIntensityRanged(
-    #         #     keys=["image"],
-    #         #     a_min=-175,
-    #         #     a_max=250,
-    #         #     b_min=0.0,
-    #         #     b_max=1.0,
-    #         #     clip=True,
-    #         # ),
-    #         # CropForegroundd(keys=["image", "label"], source_key="image"),
-    #         # Orientationd(keys=["image", "label"], axcodes="RAS"),
-    #         # Spacingd(
-    #         #     keys=["image", "label"],
-    #         #     pixdim=(1.5, 1.5, 2.0),
-    #         #     mode=("bilinear", "nearest"),
-    #         # ),
-    #         EnsureTyped(keys=["image", "label"], device=device, track_meta=False),
-    #         Resized(keys=["image", "label"],spatial_size=(args.image_size, args.image_size)),
+    train_transforms = Compose(
+        [   
+            LoadImaged(keys=["image", "label"], reader="PILReader", ensure_channel_first=True),
+            # ScaleIntensityRanged(
+            #     keys=["image"],
+            #     a_min=-175,
+            #     a_max=250,
+            #     b_min=0.0,
+            #     b_max=1.0,
+            #     clip=True,
+            # ),
+            # CropForegroundd(keys=["image", "label"], source_key="image"),
+            # Orientationd(keys=["image", "label"], axcodes="RAS"),
+            # Spacingd(
+            #     keys=["image", "label"],
+            #     pixdim=(1.5, 1.5, 2.0),
+            #     mode=("bilinear", "nearest"),
+            # ),
+            EnsureTyped(keys=["image", "label"], device=device, track_meta=False),
+            Resized(keys=["image", "label"],spatial_size=(args.image_size, args.image_size)),
 
-    #         # RandCropByPosNegLabeld(
-    #         #     keys=["image", "label"],
-    #         #     label_key="label",
-    #         #     spatial_size=(roi_size, roi_size, chunk),
-    #         #     pos=1,
-    #         #     neg=1,
-    #         #     num_samples=num_sample,
-    #         #     image_key="image",
-    #         #     image_threshold=0,
-    #         # ),
-    #         RandFlipd(
-    #             keys=["image", "label"],
-    #             spatial_axis=[0],
-    #             prob=0.10,
-    #         ),
-    #         RandFlipd(
-    #             keys=["image", "label"],
-    #             spatial_axis=[1],
-    #             prob=0.10,
-    #         ),
-    #         # RandFlipd(
-    #         #     keys=["image", "label"],
-    #         #     spatial_axis=[2],
-    #         #     prob=0.10,
-    #         # ),
-    #         RandRotate90d(
-    #             keys=["image", "label"],
-    #             prob=0.10,
-    #             max_k=3,
-    #         ),
-    #         RandShiftIntensityd(
-    #             keys=["image"],
-    #             offsets=0.10,
-    #             prob=0.50,
-    #         ),
-    #     ]
-    # )
+            # RandCropByPosNegLabeld(
+            #     keys=["image", "label"],
+            #     label_key="label",
+            #     spatial_size=(roi_size, roi_size, chunk),
+            #     pos=1,
+            #     neg=1,
+            #     num_samples=num_sample,
+            #     image_key="image",
+            #     image_threshold=0,
+            # ),
+            RandFlipd(
+                keys=["image", "label"],
+                spatial_axis=[0],
+                prob=0.10,
+            ),
+            RandFlipd(
+                keys=["image", "label"],
+                spatial_axis=[1],
+                prob=0.10,
+            ),
+            # RandFlipd(
+            #     keys=["image", "label"],
+            #     spatial_axis=[2],
+            #     prob=0.10,
+            # ),
+            RandRotate90d(
+                keys=["image", "label"],
+                prob=0.10,
+                max_k=3,
+            ),
+            RandShiftIntensityd(
+                keys=["image"],
+                offsets=0.10,
+                prob=0.50,
+            ),
+        ]
+    )
 
-    # val_transforms = Compose(
-    #     [
-    #         LoadImaged(keys=["image", "label"], ensure_channel_first=True),
-    #         # ScaleIntensityRanged(
-    #         #     keys=["image"], a_min=-175, a_max=250, b_min=0.0, b_max=1.0, clip=True
-    #         # ),
-    #         # CropForegroundd(keys=["image", "label"], source_key="image"),
-    #         # Orientationd(keys=["image", "label"], axcodes="RAS"),
-    #         # Spacingd(
-    #         #     keys=["image", "label"],
-    #         #     pixdim=(1.5, 1.5, 2.0),
-    #         #     mode=("bilinear", "nearest"),
-    #         # ),
-    #         EnsureTyped(keys=["image", "label"], device=device, track_meta=True),
-    #     ]
-    # )
-    # data_dir = args.data_path
-    # split_JSON = "dataset_0.json"
+    val_transforms = Compose(
+        [
+            LoadImaged(keys=["image", "label"], ensure_channel_first=True),
+            # ScaleIntensityRanged(
+            #     keys=["image"], a_min=-175, a_max=250, b_min=0.0, b_max=1.0, clip=True
+            # ),
+            # CropForegroundd(keys=["image", "label"], source_key="image"),
+            # Orientationd(keys=["image", "label"], axcodes="RAS"),
+            # Spacingd(
+            #     keys=["image", "label"],
+            #     pixdim=(1.5, 1.5, 2.0),
+            #     mode=("bilinear", "nearest"),
+            # ),
+            EnsureTyped(keys=["image", "label"], device=device, track_meta=True),
+        ]
+    )
+    data_dir = args.data_path
+    split_JSON = "dataset_0.json"
 
-    # datasets = os.path.join(data_dir, split_JSON)
-    # datalist = load_decathlon_datalist(datasets, True, "training")
-    # # val_files = load_decathlon_datalist(datasets, True, "validation")
-    # # print("Train files:", len(datalist))
-    # # print("Validation files:", len(val_files))
-    # # print("datalist",datalist)
-    # train_ds = CacheDataset(
-    #     data=datalist,
-    #     transform=train_transforms,
-    #     cache_num=24,
-    #     cache_rate=1.0,
-    #     num_workers=0,
-    # )
-    # # print("train das",train_ds[0]['image'].shape)
-    # # print("train lab",train_ds[0]['label'].shape)
-    # nice_train_loader = ThreadDataLoader(train_ds, num_workers=0, batch_size=args.b, shuffle=True)
+    datasets = os.path.join(data_dir, split_JSON)
+    datalist = load_decathlon_datalist(datasets, True, "training")
+    # val_files = load_decathlon_datalist(datasets, True, "validation")
+    # print("Train files:", len(datalist))
+    # print("Validation files:", len(val_files))
+    # print("datalist",datalist)
+    train_ds = CacheDataset(
+        data=datalist,
+        transform=train_transforms,
+        cache_num=24,
+        cache_rate=1.0,
+        num_workers=0,
+    )
+    # print("train das",train_ds[0]['image'].shape)
+    # print("train lab",train_ds[0]['label'].shape)
+    nice_train_loader = ThreadDataLoader(train_ds, num_workers=0, batch_size=args.b, shuffle=True)
     # val_ds = CacheDataset(
     #     data=val_files, transform=val_transforms, cache_num=2, cache_rate=1.0, num_workers=0
     # )
