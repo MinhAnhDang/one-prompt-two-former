@@ -295,11 +295,12 @@ if args.use_amp:
 for epoch in range(start_epoch, num_epochs):
     epoch_loss = 0
     for step, data in enumerate(tqdm(nice_train_loader)):
+        print("query image", data['image'])
         optimizer.zero_grad()
         if args.use_amp:
                 ## AMP
                 with torch.autocast(device_type="cuda", dtype=torch.float16):
-                    outputs = model(data, data, multimask_output=True)[0]
+                    outputs = model(data, data, multimask_output=False)[0]
                     loss = seg_loss(outputs['masks'], data['label'].to(device)) + ce_loss(
                         outputs['masks'], data['label'].float().to(device)
                     )
@@ -308,17 +309,17 @@ for epoch in range(start_epoch, num_epochs):
                 scaler.update()
                 optimizer.zero_grad()
         else:
-                outputs = model(data, data, multimask_output=True)[0]
+                outputs = model(data, data, multimask_output=False)[0]
                 # print(outputs[0]['masks'].shape)[0]
                 # print(data['label'].shape)
-                print("outputs", outputs['masks'])
-                print("data", data['label'])
-                seg_l = seg_loss(outputs['masks'], data['label'].to(device))
-                ce_l = ce_loss(outputs['masks'], data['label'].float().to(device))
-                print("seg_l", seg_l)
-                print("ce_l", ce_l)
-                loss = seg_l + ce_l
-                # loss = seg_loss(outputs['masks'], data['label'].to(device)) + ce_loss(outputs['masks'], data['label'].float().to(device))
+                # print("outputs", outputs['masks'])
+                # print("data", data['label'])
+                # seg_l = seg_loss(outputs['masks'], data['label'].to(device))
+                # ce_l = ce_loss(outputs['masks'], data['label'].float().to(device))
+                # print("seg_l", seg_l)
+                # print("ce_l", ce_l)
+                # loss = seg_l + ce_l
+                loss = seg_loss(outputs['masks'], data['label'].to(device)) + ce_loss(outputs['masks'], data['label'].float().to(device))
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
