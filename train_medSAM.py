@@ -311,7 +311,14 @@ for epoch in range(start_epoch, num_epochs):
                 outputs = model(data, data, multimask_output=True)[0]
                 # print(outputs[0]['masks'].shape)[0]
                 # print(data['label'].shape)
-                loss = seg_loss(outputs['masks'], data['label'].to(device)) + ce_loss(outputs['masks'], data['label'].float().to(device))
+                print("outputs", outputs['masks'])
+                print("data", data['label'])
+                seg_l = seg_loss(outputs['masks'], data['label'].to(device))
+                ce_l = ce_loss(outputs['masks'], data['label'].float().to(device))
+                print("seg_l", seg_l)
+                print("ce_l", ce_l)
+                loss = seg_l + ce_l
+                # loss = seg_loss(outputs['masks'], data['label'].to(device)) + ce_loss(outputs['masks'], data['label'].float().to(device))
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
