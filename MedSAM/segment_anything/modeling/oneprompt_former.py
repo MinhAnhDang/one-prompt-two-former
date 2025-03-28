@@ -116,8 +116,7 @@ class PromptParser(nn.Module):
         att_m = self.gauss(att_m)
         etq = torch.matmul(image_embedding.view(-1, x).unsqueeze(-1), (tmp_embedding + prompt_embedding1 + prompt_embedding2).view(-1, c).unsqueeze(-2)).view(b, n, x, c)
         # etq = torch.einsum ('bncd, bndx -> bncx', image_embedding.unsqueeze(-1), (tmp_embedding + pt_pe).unsqueeze(-2))
-        # att_m = torch.max(torch.matmul(att_m, etq), etq)
-        torch.cuda.empty_cache()
+        att_m = torch.max(torch.matmul(att_m, etq), etq)
         gc.collect()
         # print("Memory allocated", torch.cuda.memory_allocated(0)/1e9)
         # print("Reversed memory", torch.cuda.memory_reserved(0)/1e9)
@@ -176,6 +175,7 @@ class _OnePromptFormer(nn.Module):
     ) -> Tuple[Tensor, Tensor]:
 
         image_embedding, et = self.parser(image_embedding,tmp_embedding, prompt_embedding1, prompt_embedding2)
+        gc.collect()
         # print("et size is", et.size())
         # print("image_embedding size is", image_embedding.size())
         es = self.attns1(q=image_embedding, k= emb, v= emb)
@@ -401,6 +401,7 @@ class OnePromptFormer(nn.Module):
             # print('p1 size', p1.size())
             # print('p2 size', p2.size())
             x = self.of[u](x,img_embed, tmp_embed, p1, p2)
+            gc.collect()
             # print(x.size())
         x = rearrange(x,'b (c1 c2) d -> b d c1 c2', c1 = int(math.sqrt(x.size(1))))
         x = self.patch_embed(x)
