@@ -263,7 +263,7 @@ print("Number of trainable parameters: ", sum(p.numel() for p in model.parameter
 print("Number of prompt encoder, mask decoder and one-prompt-former parameters: ", sum(p.numel() for p in prompt_mask_dec_params if p.requires_grad))
 # print(model)
 if args.use_amp:
-    scaler = torch.amp.GradScaler()
+    scaler = torch.amp.GradScaler('cuda')
     
 for epoch in range(start_epoch, num_epochs):
     epoch_loss = 0
