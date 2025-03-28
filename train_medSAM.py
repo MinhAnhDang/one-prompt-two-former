@@ -89,8 +89,8 @@ shutil.copyfile(
  
 ### Load the model
 MedSAM_CKPT_PATH = "MedSAM/work_dir/MedSAM/medsam_vit_b.pth"
-medSAM_weights = torch.load(MedSAM_CKPT_PATH, map_location=device)
-model = oneprompt_model_registry["vit_b"](checkpoint=None).to(device)
+medSAM_weights = torch.load(MedSAM_CKPT_PATH, map_location="cpu", weights_only=True)
+model = oneprompt_model_registry["vit_b"](checkpoint=None)
 missing_keys, unexpected_keys = model.load_state_dict(medSAM_weights, strict=False)
 # Log missing and unexpected keys for debugging purposes
 # print("Missing keys:", missing_keys)
@@ -214,7 +214,7 @@ print("Number of prompt encoder, mask decoder and one-prompt-former parameters: 
 # print(model)
 if args.use_amp:
     scaler = torch.amp.GradScaler('cuda')
-    
+model.to(device)    
 for epoch in range(start_epoch, num_epochs):
     epoch_loss = 0
     for step, data in enumerate(tqdm(nice_train_loader)):
