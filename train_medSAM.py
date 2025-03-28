@@ -8,16 +8,10 @@ from MedSAM.segment_anything import oneprompt_model_registry
 import torch.nn.functional as F
 import os
 from datetime import datetime
-from collections import OrderedDict
 import monai
 import torch.nn as nn
-import torch.optim as optim
 from sklearn.metrics import roc_auc_score, accuracy_score,confusion_matrix
-import torchvision
-import torchvision.transforms as transforms
-# from skimage import io
 from torch.utils.data import DataLoader
-#from dataset import *
 from torch.autograd import Variable
 from PIL import Image
 # from tensorboardX import SummaryWriter
@@ -29,7 +23,6 @@ import cfg
 from tqdm import tqdm
 from torch.utils.data import DataLoader, random_split
 from utils import *
-import function 
 import wandb
 from monai.transforms import (
     AsDiscrete,
@@ -100,10 +93,11 @@ medSAM_weights = torch.load(MedSAM_CKPT_PATH, map_location=device)
 model = oneprompt_model_registry["vit_b"](checkpoint=None).to(device)
 missing_keys, unexpected_keys = model.load_state_dict(medSAM_weights, strict=False)
 # Log missing and unexpected keys for debugging purposes
-print("Missing keys:", missing_keys)
-print("Unexpected keys:", unexpected_keys)
+# print("Missing keys:", missing_keys)
+# print("Unexpected keys:", unexpected_keys)
 
 prompt_mask_dec_params = list(model.mask_decoder.parameters()) + list(model.prompt_encoder.parameters())+list(model.oneprompt_former.parameters())
+# Opimizer
 optimizer = torch.optim.AdamW(
     prompt_mask_dec_params, lr=args.lr, weight_decay=args.weight_decay
 )
@@ -111,6 +105,7 @@ optimizer = torch.optim.AdamW(
 seg_loss = monai.losses.DiceLoss(sigmoid=True, squared_pred=True, reduction="mean")
 # cross entropy loss
 ce_loss = nn.BCEWithLogitsLoss(reduction="mean")
+
 # %% Load the dataset
 if args.dataset == 'isic':
     # transform_train = transforms.Compose([
@@ -145,34 +140,8 @@ if args.dataset == 'isic':
         [   
             LoadImaged(keys=["image", "label"], reader="PILReader", ensure_channel_first=True),
             ScaleIntensityd(keys=["image","label"], minv=0.0, maxv=1.0),
-            # ScaleIntensityRanged(
-            #     keys=["image"],
-            #     a_min=0.0,
-            #     a_max=1.0,
-            #     b_min=0.0,
-            #     b_max=1.0,
-            #     clip=True,
-            # ),
-            # CropForegroundd(keys=["image", "label"], source_key="image"),
-            # Orientationd(keys=["image", "label"], axcodes="RAS"),
-            # Spacingd(
-            #     keys=["image", "label"],
-            #     pixdim=(1.5, 1.5, 2.0),
-            #     mode=("bilinear", "nearest"),
-            # ),
             EnsureTyped(keys=["image", "label"], device=device, track_meta=False),
             Resized(keys=["image", "label"],spatial_size=(args.image_size, args.image_size)),
-
-            # RandCropByPosNegLabeld(
-            #     keys=["image", "label"],
-            #     label_key="label",
-            #     spatial_size=(roi_size, roi_size, chunk),
-            #     pos=1,
-            #     neg=1,
-            #     num_samples=num_sample,
-            #     image_key="image",
-            #     image_threshold=0,
-            # ),
             RandFlipd(
                 keys=["image", "label"],
                 spatial_axis=[0],
@@ -183,11 +152,6 @@ if args.dataset == 'isic':
                 spatial_axis=[1],
                 prob=0.10,
             ),
-            # RandFlipd(
-            #     keys=["image", "label"],
-            #     spatial_axis=[2],
-            #     prob=0.10,
-            # ),
             RandRotate90d(
                 keys=["image", "label"],
                 prob=0.10,
@@ -205,16 +169,6 @@ if args.dataset == 'isic':
         [
             LoadImaged(keys=["image", "label"], ensure_channel_first=True),
             ScaleIntensityd(keys=["image","label"], minv=0.0, maxv=1.0),
-            # ScaleIntensityRanged(
-            #     keys=["image"], a_min=0.0, a_max=1.0, b_min=0.0, b_max=1.0, clip=True
-            # ),
-            # CropForegroundd(keys=["image", "label"], source_key="image"),
-            # Orientationd(keys=["image", "label"], axcodes="RAS"),
-            # Spacingd(
-            #     keys=["image", "label"],
-            #     pixdim=(1.5, 1.5, 2.0),
-            #     mode=("bilinear", "nearest"),
-            # ),
             EnsureTyped(keys=["image", "label"], device=device, track_meta=True),
         ]
     )
@@ -224,9 +178,6 @@ if args.dataset == 'isic':
     datasets = os.path.join(data_dir, split_JSON)
     datalist = load_decathlon_datalist(datasets, True, "training")
     # val_files = load_decathlon_datalist(datasets, True, "validation")
-    # print("Train files:", len(datalist))
-    # print("Validation files:", len(val_files))
-    # print("datalist",datalist)
     train_ds = CacheDataset(
         data=datalist,
         transform=train_transforms,
@@ -234,8 +185,6 @@ if args.dataset == 'isic':
         cache_rate=1.0,
         num_workers=0,
     )
-    # print("train das",train_ds[0]['image'].shape)
-    # print("train lab",train_ds[0]['label'].shape)
     nice_train_loader = ThreadDataLoader(train_ds, num_workers=0, batch_size=args.b, shuffle=True)
     # val_ds = CacheDataset(
     #     data=val_files, transform=val_transforms, cache_num=2, cache_rate=1.0, num_workers=0
@@ -249,6 +198,7 @@ losses = []
 best_loss = 1e10
 start_epoch = 0
 
+# Resume training
 if args.resume is not None:
     if os.path.isfile(args.resume):
         ## Map model to be loaded to specified single GPU
