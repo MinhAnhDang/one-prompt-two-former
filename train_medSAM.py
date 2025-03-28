@@ -258,19 +258,9 @@ if args.resume is not None:
         optimizer.load_state_dict(checkpoint["optimizer"])
         
 model.train()
-print(
-        "Number of total parameters: ",
-        sum(p.numel() for p in model.parameters()),
-    )  # 93735472
-print(
-    "Number of trainable parameters: ",
-    sum(p.numel() for p in model.parameters() if p.requires_grad),
-)  # 93729252
-
-print(
-    "Number of prompt encoder, mask decoder and one-prompt-former parameters: ",
-    sum(p.numel() for p in prompt_mask_dec_params if p.requires_grad),
-)
+print("Number of total parameters: ", sum(p.numel() for p in model.parameters()),)  # 93735472
+print("Number of trainable parameters: ", sum(p.numel() for p in model.parameters() if p.requires_grad))  # 93729252
+print("Number of prompt encoder, mask decoder and one-prompt-former parameters: ", sum(p.numel() for p in prompt_mask_dec_params if p.requires_grad))
 # print(model)
 if args.use_amp:
     scaler = torch.amp.GradScaler()
