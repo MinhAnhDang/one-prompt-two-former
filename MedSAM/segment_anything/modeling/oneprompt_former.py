@@ -116,15 +116,15 @@ class PromptParser(nn.Module):
         att_m = self.gauss(att_m)
         etq = torch.matmul(image_embedding.view(-1, x).unsqueeze(-1), (tmp_embedding + prompt_embedding1 + prompt_embedding2).view(-1, c).unsqueeze(-2)).view(b, n, x, c)
         # etq = torch.einsum ('bncd, bndx -> bncx', image_embedding.unsqueeze(-1), (tmp_embedding + pt_pe).unsqueeze(-2))
-        att_m = torch.max(torch.matmul(att_m, etq), etq)
+        # att_m = torch.max(torch.matmul(att_m, etq), etq)
         # print("Memory allocated", torch.cuda.memory_allocated(0)/1e9)
         # print("Reversed memory", torch.cuda.memory_reserved(0)/1e9)
         # att_m = torch.matmul(att_m, etq)
         # res = torch.einsum ('bncx, bnx -> bnc', att_m, tmp_embedding + prompt_embedding1 + prompt_embedding2) 
-        res =  torch.matmul(att_m, (tmp_embedding + prompt_embedding1 + prompt_embedding2).unsqueeze(-1)).squeeze(-1)
+        # res =  torch.matmul(torch.max(torch.matmul(att_m, etq), etq), (tmp_embedding + prompt_embedding1 + prompt_embedding2).unsqueeze(-1)).squeeze(-1)
         gc.collect()
         torch.cuda.empty_cache()
-        return image_embedding, res
+        return image_embedding, torch.matmul(torch.max(torch.matmul(att_m, etq), etq), (tmp_embedding + prompt_embedding1 + prompt_embedding2).unsqueeze(-1)).squeeze(-1)
 
 
 class _OnePromptFormer(nn.Module):
