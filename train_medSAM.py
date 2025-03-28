@@ -337,7 +337,7 @@ for epoch in range(start_epoch, num_epochs):
     )
     ## save the latest model
     checkpoint = {
-        "model": medsam_model.state_dict(),
+        "model": model.state_dict(),
         "optimizer": optimizer.state_dict(),
         "epoch": epoch,
     }
@@ -346,7 +346,7 @@ for epoch in range(start_epoch, num_epochs):
     if epoch_loss < best_loss:
         best_loss = epoch_loss
         checkpoint = {
-            "model": medsam_model.state_dict(),
+            "model": model.state_dict(),
             "optimizer": optimizer.state_dict(),
             "epoch": epoch,
         }
