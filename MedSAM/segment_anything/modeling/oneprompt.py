@@ -29,20 +29,18 @@ class OnePrompt(nn.Module):
     
     def __init__(
         self,
-        args,
         image_encoder,
-        onepropmt_former,
+        oneprompt_former,
         mask_decoder,
         prompt_encoder,
         pixel_mean: List[float] = [123.675, 116.28, 103.53],
         pixel_std: List[float] = [58.395, 57.12, 57.375],
     ):
         super().__init__()
-        self.args = args
         self.image_encoder = image_encoder
         self.mask_decoder = mask_decoder
         self.prompt_encoder = prompt_encoder
-        self.oneprompt_former = onepropmt_former
+        self.oneprompt_former = oneprompt_former
         self.register_buffer("pixel_mean", torch.Tensor(pixel_mean).view(-1, 1, 1), False)
         self.register_buffer("pixel_std", torch.Tensor(pixel_std).view(-1, 1, 1), False)
         # freeze image encoder encoder
@@ -62,12 +60,9 @@ class OnePrompt(nn.Module):
         device = self.device
         imgs = batched_input['image'].to(dtype = torch.float32, device = device)
         masks = batched_input['label'].to(dtype = torch.float32, device = device)
-        # print("imgs", imgs.shape)
-        # print("masks", masks.shape)
-        # name = batched_input['image_meta_dict']['filename_or_obj']
-        
-        tmp_img = template_input['image'].to(dtype = torch.float32, device = device)[0,:,:,:].unsqueeze(0).repeat(self.args.b, 1, 1, 1)
-        tmp_mask = template_input['label'].to(dtype = torch.float32, device = device)[0,:,:,:].unsqueeze(0).repeat(self.args.b, 1, 1, 1)
+        b, c, h, w = imgs.shape
+        tmp_img = template_input['image'].to(dtype = torch.float32, device = device)[0,:,:,:].unsqueeze(0).repeat(b, 1, 1, 1)
+        tmp_mask = template_input['label'].to(dtype = torch.float32, device = device)[0,:,:,:].unsqueeze(0).repeat(b, 1, 1, 1)
         # do not compute gradients for prompt encoder
         if 'pt' not in template_input:
             # tmp_img, pt, tmp_mask = generate_click_prompt3D(tmp_img, tmp_mask)
@@ -87,21 +82,15 @@ class OnePrompt(nn.Module):
         
         with torch.no_grad():
             r_emb, r_list = self.image_encoder(imgs)  # (B, 256, 64, 64)
-            # print("r_emb", r_emb.shape)
             t_emb, t_list= self.image_encoder(tmp_img)  # (B, 256, 64, 64)
         outputs = []
-        
         
         p1, p2, sparse_embeddings, dense_embeddings = self.prompt_encoder(
             points=pt,
             boxes=None,
             masks=None,
         )
-        # print("p1", p1.shape)
-        # print("p2", p2.shape)
-        # print("sparse_embeddings", sparse_embeddings.shape)
-        # print("dense_embeddings", dense_embeddings.shape)
-        
+       
         r_emb, mixed_features = self.oneprompt_former(
             skips_raw = r_list,
             skips_tmp = t_list,
@@ -122,8 +111,7 @@ class OnePrompt(nn.Module):
             dense_prompt_embeddings=dense_embeddings,  # (B, 256, 64, 64)
             multimask_output=False,
         )
-        # print("low_res_masks", low_res_masks.shape)
-        # print("iou_predictions", iou_predictions.shape)
+       
         masks = self.postprocess_masks(
             low_res_masks,
             input_size=batched_input["image"].shape[-2:],

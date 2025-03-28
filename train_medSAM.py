@@ -3,9 +3,7 @@ import matplotlib.pyplot as plt
 import os
 join = os.path.join
 import torch
-from MedSAM.segment_anything import sam_model_registry
-from MedSAM.segment_anything.modeling import OnePrompt
-from MedSAM.segment_anything.modeling import OnePromptFormer
+from MedSAM.segment_anything import oneprompt_model_registry
 # from skimage import io, transform
 import torch.nn.functional as F
 import os
@@ -98,31 +96,13 @@ shutil.copyfile(
  
 ### Load the model
 MedSAM_CKPT_PATH = "MedSAM/work_dir/MedSAM/medsam_vit_b.pth"
+medSAM_weights = torch.load(MedSAM_CKPT_PATH, map_location=device)
+model = oneprompt_model_registry["vit_b"](checkpoint=None).to(device)
+missing_keys, unexpected_keys = model.load_state_dict(medSAM_weights, strict=False)
+# Log missing and unexpected keys for debugging purposes
+print("Missing keys:", missing_keys)
+print("Unexpected keys:", unexpected_keys)
 
-medsam_model = sam_model_registry['vit_b'](checkpoint=MedSAM_CKPT_PATH).to(device)
-depth = args.depth
-prompt_embed_dim = args.dim
-embed_dim = 768
-out_chans = args.dim
-token_num = 4096
-patch_size = args.patch_size
-mlp_dim = args.mlp_dim
-features_former = OnePromptFormer(
-                    depth=depth,
-                    embed_dim = embed_dim, 
-                    prompt_embed_dim = prompt_embed_dim,
-                    out_chans = out_chans,
-                    token_num = token_num, 
-                    patch_size=16,
-                    mlp_dim = mlp_dim
-                ).to(device)
-model = OnePrompt(
-    args=args,
-    image_encoder=medsam_model.image_encoder,
-    onepropmt_former=features_former,
-    mask_decoder=medsam_model.mask_decoder,
-    prompt_encoder=medsam_model.prompt_encoder,
-).to(device)
 prompt_mask_dec_params = list(model.mask_decoder.parameters()) + list(model.prompt_encoder.parameters())+list(model.oneprompt_former.parameters())
 optimizer = torch.optim.AdamW(
     prompt_mask_dec_params, lr=args.lr, weight_decay=args.weight_decay
@@ -298,7 +278,6 @@ if args.use_amp:
 for epoch in range(start_epoch, num_epochs):
     epoch_loss = 0
     for step, data in enumerate(tqdm(nice_train_loader)):
-        # print("query image", data['image'])
         optimizer.zero_grad()
         if args.use_amp:
                 ## AMP
@@ -313,15 +292,6 @@ for epoch in range(start_epoch, num_epochs):
                 optimizer.zero_grad()
         else:
                 outputs = model(data, data, multimask_output=False)[0]
-                # print(outputs[0]['masks'].shape)[0]
-                # print(data['label'].shape)
-                # print("outputs", outputs['masks'])
-                # print("data", data['label'])
-                # seg_l = seg_loss(outputs['masks'], data['label'].to(device))
-                # ce_l = ce_loss(outputs['masks'], data['label'].float().to(device))
-                # print("seg_l", seg_l)
-                # print("ce_l", ce_l)
-                # loss = seg_l + ce_l
                 loss = seg_loss(outputs['masks'], data['label'].to(device)) + ce_loss(outputs['masks'], data['label'].float().to(device))
                 loss.backward()
                 optimizer.step()
@@ -352,14 +322,3 @@ for epoch in range(start_epoch, num_epochs):
         }
         torch.save(checkpoint, join(model_save_path, "medsam_model_best.pth"))
 
-    # %% plot loss
-    # plt.plot(losses)
-    # plt.title("Dice + Cross Entropy Loss")
-    # plt.xlabel("Epoch")
-    # plt.ylabel("Loss")
-    # plt.savefig(join(model_save_path, args.task_name + "train_loss.png"))
-    # plt.close()
-        # prediction = model(data, data, multimask_output=True)
-        # print(model.device)
-        # print(prediction)
-        # break
