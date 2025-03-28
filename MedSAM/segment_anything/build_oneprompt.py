@@ -86,7 +86,7 @@ def _build_one(
             out_chans=prompt_embed_dim,
         ),
         oneprompt_former=OnePromptFormer(
-            depth=encoder_depth//2,
+            depth=encoder_depth//3,
             embed_dim=encoder_embed_dim,
             prompt_embed_dim=prompt_embed_dim,
             out_chans=prompt_embed_dim,
