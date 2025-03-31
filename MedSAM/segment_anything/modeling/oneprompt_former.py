@@ -107,8 +107,8 @@ class PromptParser(nn.Module):
 
         # pt_pe = prompt_embedding1 + prompt_embedding2
         etpp = self.pt_mix(tmp_embedding, prompt_embedding1, prompt_embedding2)
-        # print("etpp shape is", etpp.size())
-        # print("image_embedding shape is", image_embedding.size())
+        print("etpp shape is", etpp.size())
+        print("image_embedding shape is", image_embedding.size())
         b, n, c = etpp.size()
         b, n, x = image_embedding.size()
         att_m = torch.matmul(etpp.view(-1, c).unsqueeze(-1), image_embedding.view(-1, x).unsqueeze(-2)).view(b, n, c, x)
@@ -299,10 +299,13 @@ class Decode_Align(nn.Module):
 
         p1 = self.p1_tokens.weight.unsqueeze(0).expand(pt1.size(0), -1, -1)
         p2 = self.p2_tokens.weight.unsqueeze(0).expand(pt1.size(0), -1, -1)
-
+        print("p1 shape", p1.shape)
+        print("p2 shape", p2.shape)
+        print("pt1 shape", pt1.shape)
+        print("pt2 shape", pt2.shape)
         p1_tokens = torch.cat((p1, pt1), dim=1)
         p2_tokens = torch.cat((p2, pt2), dim=1)
-        # print("Template tokens shape", p1_tokens.shape)
+        print("Template tokens shape", p1_tokens.shape)
         # print("Image tokens shape", image_embeddings.shape)
 
         if image_embeddings.shape[0] != p1_tokens.shape[0]:
