@@ -93,7 +93,7 @@ class PromptParser(nn.Module):
         self.embedding_dim = embedding_dim
 
         self.pt_mix = PromptMixer()
-        self.gauss = GaussianConv2d(in_channels = token_num)
+        self.gauss = GaussianConv2d(in_channels = 1)
 
         self.norm_final_attn = nn.LayerNorm(embedding_dim)
 
