@@ -107,25 +107,25 @@ class PromptParser(nn.Module):
 
         # pt_pe = prompt_embedding1 + prompt_embedding2
         etpp = self.pt_mix(tmp_embedding, prompt_embedding1, prompt_embedding2)
-        print("etpp shape is", etpp.size())
-        print("image_embedding shape is", image_embedding.size())
-        b, n, c = etpp.size()
-        b, n, x = image_embedding.size()
-        att_m = torch.matmul(etpp.view(-1, c).unsqueeze(-1), image_embedding.view(-1, x).unsqueeze(-2)).view(b, n, c, x)
+        # print("etpp shape is", etpp.size())
+        # print("image_embedding shape is", image_embedding.size())
+        # b, n, c = etpp.size()
+        # b, n, x = image_embedding.size()
+        att_m = torch.matmul(etpp, image_embedding.permute(0, 2, 1)) #b n n
+        # att_m = torch.matmul(etpp.view(-1, c).unsqueeze(-1), image_embedding.view(-1, x).unsqueeze(-2)).view(b, n, c, x)
         # att_m = torch.einsum ('bncd, bndx -> bncx', etpp.unsqueeze(-1), image_embedding.unsqueeze(-2)) 
         att_m = self.gauss(att_m)
-        etq = torch.matmul(image_embedding.view(-1, x).unsqueeze(-1), (tmp_embedding + prompt_embedding1 + prompt_embedding2).view(-1, c).unsqueeze(-2)).view(b, n, x, c)
+        etq = torch.matmul(image_embedding, (tmp_embedding + prompt_embedding1 + prompt_embedding2).permute(0, 2, 1)) # b n n
+        # etq = torch.matmul(image_embedding.view(-1, x).unsqueeze(-1), (tmp_embedding + prompt_embedding1 + prompt_embedding2).view(-1, c).unsqueeze(-2)).view(b, n, x, c)
         # etq = torch.einsum ('bncd, bndx -> bncx', image_embedding.unsqueeze(-1), (tmp_embedding + pt_pe).unsqueeze(-2))
-        # att_m = torch.max(torch.matmul(att_m, etq), etq)
-        # print("Memory allocated", torch.cuda.memory_allocated(0)/1e9)
-        # print("Reversed memory", torch.cuda.memory_reserved(0)/1e9)
+        att_m = torch.max(att_m * etq, etq)
         # att_m = torch.matmul(att_m, etq)
         # res = torch.einsum ('bncx, bnx -> bnc', att_m, tmp_embedding + prompt_embedding1 + prompt_embedding2) 
-        # res =  torch.matmul(torch.max(torch.matmul(att_m, etq), etq), (tmp_embedding + prompt_embedding1 + prompt_embedding2).unsqueeze(-1)).squeeze(-1)
+        # res =  torch.matmul(att_m, (tmp_embedding + prompt_embedding1 + prompt_embedding2).unsqueeze(-1)).squeeze(-1)
+        res = torch.matmul(att_m, (tmp_embedding + prompt_embedding1 + prompt_embedding2))
         gc.collect()
         torch.cuda.empty_cache()
-        return image_embedding, torch.matmul(torch.max(torch.matmul(att_m, etq), etq), (tmp_embedding + prompt_embedding1 + prompt_embedding2).unsqueeze(-1)).squeeze(-1)
-
+        return image_embedding, res
 
 class _OnePromptFormer(nn.Module):
     def __init__(
@@ -299,13 +299,13 @@ class Decode_Align(nn.Module):
 
         p1 = self.p1_tokens.weight.unsqueeze(0).expand(pt1.size(0), -1, -1)
         p2 = self.p2_tokens.weight.unsqueeze(0).expand(pt1.size(0), -1, -1)
-        print("p1 shape", p1.shape)
-        print("p2 shape", p2.shape)
-        print("pt1 shape", pt1.shape)
-        print("pt2 shape", pt2.shape)
+        # print("p1 shape", p1.shape)
+        # print("p2 shape", p2.shape)
+        # print("pt1 shape", pt1.shape)
+        # print("pt2 shape", pt2.shape)
         p1_tokens = torch.cat((p1, pt1), dim=1)
         p2_tokens = torch.cat((p2, pt2), dim=1)
-        print("Template tokens shape", p1_tokens.shape)
+        # print("Template tokens shape", p1_tokens.shape)
         # print("Image tokens shape", image_embeddings.shape)
 
         if image_embeddings.shape[0] != p1_tokens.shape[0]:
